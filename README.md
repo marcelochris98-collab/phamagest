@@ -52,7 +52,8 @@ npm install && npm run build
 - La connexion se fait sur `/login`. Si un compte appartient à plusieurs entreprises, l'application demande de choisir l'espace actif.
 - La vérification de l’adresse e-mail n’est pas requise pour accéder à l’espace entreprise pendant cette phase de tests.
 - Les données métier et les rôles sont séparés par entreprise. L’inscription ne vérifie pas l’identité légale ou l’autorisation pharmaceutique de l’entreprise.
-- L’administration plateforme (`/platform/companies`) est réservée aux comptes promus manuellement avec `php artisan platform:admin adresse@example.com`. Cette commande demande confirmation. Elle permet de gérer les statuts d’abonnement et les essais; les décisions sont journalisées.
+- Le compte administrateur plateforme est distinct des comptes d’entreprise. Créez-le une seule fois avec `php artisan platform:admin:create admin@example.com`, puis choisissez un mot de passe dédié et robuste dans l’invite masquée. Connectez-vous depuis `/login`; ce compte arrive directement sur `/platform/companies` et ne rejoint aucun espace entreprise. Les administrateurs d’entreprise ordinaires arrivent sur leur tableau de bord.
+- L’administration plateforme (`/platform/companies`) permet de gérer les statuts d’abonnement et les essais; les décisions sont journalisées. Pour promouvoir un compte existant à la place, utilisez `php artisan platform:admin adresse@example.com`.
 - Après l’essai, l’accès est suspendu si aucun abonnement n’est actif. Le choix du forfait par l’entreprise et les limites de fonctionnalités par forfait restent à développer; aucun paiement en ligne ni facturation récurrente n’est branché.
 
 ### Sauvegardes et restauration (MySQL/MariaDB)

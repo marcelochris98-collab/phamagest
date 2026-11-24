@@ -30,11 +30,13 @@ class AuthenticatedSessionController extends Controller
         $request->session()->forget('active_entreprise_id');
 
         $user = $request->user();
-        $destination = $user->isPlatformAdmin() && ! $user->entreprises()->exists()
-            ? route('platform.companies.index')
-            : route('dashboard', absolute: false);
+        if ($user->isPlatformAdmin()) {
+            $request->session()->forget('url.intended');
 
-        return redirect()->intended($destination);
+            return redirect()->route('platform.companies.index');
+        }
+
+        return redirect()->intended(route('dashboard', absolute: false));
     }
 
     /**

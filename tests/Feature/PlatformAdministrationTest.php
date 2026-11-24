@@ -130,6 +130,46 @@ class PlatformAdministrationTest extends TestCase
         $this->assertTrue($user->fresh()->isPlatformAdmin());
     }
 
+    public function test_dedicated_platform_admin_can_sign_in_directly_to_platform_admin_without_company_membership(): void
+    {
+        $email = 'platform-owner@example.com';
+
+        $this->artisan('platform:admin:create', ['email' => $email])
+            ->expectsQuestion('Choose a password (minimum 12 characters)', 'correct-horse-battery-staple')
+            ->expectsQuestion('Confirm the password', 'correct-horse-battery-staple')
+            ->assertSuccessful();
+
+        $admin = User::where('email', $email)->firstOrFail();
+        $this->assertTrue($admin->isPlatformAdmin());
+        $this->assertTrue($admin->hasVerifiedEmail());
+        $this->assertFalse($admin->entreprises()->exists());
+
+        $this->from(route('dashboard'))
+            ->post('/login', [
+                'email' => $email,
+                'password' => 'correct-horse-battery-staple',
+            ])
+            ->assertRedirect(route('platform.companies.index'));
+
+        $this->get(route('platform.companies.index'))->assertOk();
+    }
+
+    public function test_regular_company_admin_still_signs_in_to_the_company_dashboard(): void
+    {
+        $entreprise = $this->createPendingCompany();
+        $entreprise->update([
+            'verification_status' => 'approved',
+            'subscription_status' => 'trial',
+            'trial_ends_at' => now()->addMonth(),
+        ]);
+        $user = $entreprise->users()->firstOrFail();
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard'));
+    }
+
     private function createPendingCompany(bool $withDocuments = false): Entreprise
     {
         $entreprise = Entreprise::create([
