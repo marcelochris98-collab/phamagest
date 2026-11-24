@@ -3,6 +3,7 @@
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EntrepriseContextController;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\MedicamentController;
 use App\Http\Controllers\ProfileController;
@@ -16,7 +17,20 @@ Route::get('/', function () {
         : redirect()->route('login');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::get('/entreprise/choisir', [EntrepriseContextController::class, 'choose'])
+        ->name('entreprise.choose');
+    Route::post('/entreprise/active', [EntrepriseContextController::class, 'update'])
+        ->name('entreprise.active');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'verified', 'entreprise'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
@@ -41,9 +55,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('ventes/{vente}/valider', [VenteController::class, 'validateVente'])->name('ventes.validate');
     Route::get('ventes/{vente}/facture', [VenteController::class, 'invoice'])->name('ventes.invoice');
 
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';

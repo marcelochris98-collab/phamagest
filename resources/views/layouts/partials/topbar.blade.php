@@ -14,7 +14,35 @@
         <p class="font-medium text-slate-900">{{ auth()->user()->name }}</p>
     </div>
 
-    <div class="flex items-center gap-3 ml-auto">
+    <div class="ml-auto flex items-center gap-3">
+        @isset($activeEntreprise)
+            @if ($availableEntreprises->count() > 1)
+                <form method="POST" action="{{ route('entreprise.active') }}" class="flex items-center gap-2">
+                    @csrf
+                    <label for="active_entreprise_id" class="sr-only">Espace entreprise</label>
+                    <select
+                        id="active_entreprise_id"
+                        name="entreprise_id"
+                        class="max-w-48 rounded-xl border-slate-300 py-2 text-sm text-slate-700 shadow-sm focus:border-emerald-500 focus:ring-emerald-500"
+                    >
+                        @foreach ($availableEntreprises as $entreprise)
+                            <option value="{{ $entreprise->id }}" @selected($activeEntreprise->id === $entreprise->id)>
+                                {{ $entreprise->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button
+                        type="submit"
+                        class="rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                    >
+                        Changer
+                    </button>
+                </form>
+            @else
+                <span class="hidden text-sm font-medium text-slate-600 sm:inline">{{ $activeEntreprise->nom }}</span>
+            @endif
+        @endif
+
         <a
             href="{{ route('profile.edit') }}"
             class="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition-all duration-300 ease-in-out hover:bg-slate-100 hover:text-slate-900"
