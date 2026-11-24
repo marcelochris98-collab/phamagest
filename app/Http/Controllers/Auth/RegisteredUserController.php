@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Entreprise;
 use App\Models\User;
+use App\Services\EntrepriseRoleService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Spatie\Permission\PermissionRegistrar;
 
 class RegisteredUserController extends Controller
 {
@@ -23,29 +26,49 @@ class RegisteredUserController extends Controller
         return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
+            'entreprise' => ['required', 'string', 'max:255'],
+            'entreprise_email' => ['nullable', 'email', 'max:255'],
+            'entreprise_telephone' => ['nullable', 'string', 'max:30'],
+            'entreprise_adresse' => ['nullable', 'string', 'max:1000'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        [$entreprise, $user] = DB::transaction(function () use ($validated) {
+            $entreprise = Entreprise::create([
+                'nom' => $validated['entreprise'],
+                'slug' => Str::slug($validated['entreprise']).'-'.Str::lower((string) Str::ulid()),
+                'email' => $validated['entreprise_email'] ?? null,
+                'telephone' => $validated['entreprise_telephone'] ?? null,
+                'adresse' => $validated['entreprise_adresse'] ?? null,
+            ]);
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+            ]);
+            $user->entreprises()->attach($entreprise);
+
+            $registrar = app(PermissionRegistrar::class);
+            $registrar->setPermissionsTeamId($entreprise->getKey());
+            $administrator = app(EntrepriseRoleService::class)->createDefaultRoles($entreprise);
+            $user->assignRole($administrator);
+            $registrar->forgetCachedPermissions();
+
+            return [$entreprise, $user];
+        });
 
         event(new Registered($user));
 
         Auth::login($user);
+        $request->session()->regenerate();
+        $request->session()->put('active_entreprise_id', $entreprise->getKey());
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('verification.notice');
     }
 }

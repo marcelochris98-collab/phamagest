@@ -10,9 +10,12 @@ use App\Models\Entreprise;
 use App\Models\Fournisseur;
 use App\Models\Medicament;
 use App\Models\User;
+use App\Services\EntrepriseRoleService;
 use App\Support\CurrentEntreprise;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class DemoDataSeeder extends Seeder
 {
@@ -23,6 +26,8 @@ class DemoDataSeeder extends Seeder
             ['nom' => 'PharmaGest']
         );
         app(CurrentEntreprise::class)->set($entreprise);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($entreprise->id);
+        app(EntrepriseRoleService::class)->createDefaultRoles($entreprise);
 
         $fournisseur = Fournisseur::create([
             'entreprise_id' => $entreprise->id,
@@ -115,7 +120,7 @@ class DemoDataSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $magasinier->syncRoles(['magasinier']);
+        $magasinier->syncRoles([Role::findByName('magasinier')]);
         $magasinier->entreprises()->syncWithoutDetaching([$entreprise->id]);
 
         $vendeur = User::firstOrCreate(
@@ -126,7 +131,7 @@ class DemoDataSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $vendeur->syncRoles(['vendeur']);
+        $vendeur->syncRoles([Role::findByName('vendeur')]);
         $vendeur->entreprises()->syncWithoutDetaching([$entreprise->id]);
     }
 }

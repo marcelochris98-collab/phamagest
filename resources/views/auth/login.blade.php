@@ -40,4 +40,9 @@
             </button>
         </div>
     </form>
+
+    <p class="mt-6 text-center text-sm text-slate-500">
+        Votre entreprise n’a pas encore d’espace ?
+        <a class="font-medium text-emerald-700 hover:text-emerald-800" href="{{ route('register') }}">Créer un espace entreprise</a>
+    </p>
 </x-guest-layout>

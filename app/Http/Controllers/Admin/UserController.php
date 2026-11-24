@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Support\CurrentEntreprise;
 use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -36,15 +37,20 @@ class UserController extends Controller
     public function store(StoreUserRequest $request): RedirectResponse
     {
         $entreprise = app(CurrentEntreprise::class)->get();
-        $user = User::create([
-            'name' => $request->validated('name'),
-            'email' => $request->validated('email'),
-            'password' => $request->validated('password'),
-            'email_verified_at' => now(),
-        ]);
-        $user->entreprises()->attach($entreprise);
 
-        $this->syncRoleAndPermissions($user, $request->validated('role'), $request->input('permissions', []));
+        $user = DB::transaction(function () use ($request, $entreprise) {
+            $user = User::create([
+                'name' => $request->validated('name'),
+                'email' => $request->validated('email'),
+                'password' => $request->validated('password'),
+                'email_verified_at' => now(),
+            ]);
+            $user->entreprises()->attach($entreprise);
+
+            $this->syncRoleAndPermissions($user, $request->validated('role'), $request->input('permissions', []));
+
+            return $user;
+        });
 
         return redirect()
             ->route('admin.users.index')
@@ -92,17 +98,22 @@ class UserController extends Controller
         }
 
         $name = $user->name;
-        $user->delete();
+        $user->entreprises()->detach(app(CurrentEntreprise::class)->get());
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', "L'utilisateur {$name} a été supprimé.");
+            ->with('success', "L'accès de {$name} à cette entreprise a été supprimé.");
     }
 
     protected function formData(): array
     {
+        $teamKey = config('permission.column_names.team_foreign_key');
+
         return [
-            'roles' => Role::where('guard_name', 'web')->orderBy('name')->get(),
+            'roles' => Role::where('guard_name', 'web')
+                ->where($teamKey, app(CurrentEntreprise::class)->get()->getKey())
+                ->orderBy('name')
+                ->get(),
             'permissionGroups' => Permissions::grouped(),
             'permissionLabels' => Permissions::all(),
         ];
@@ -110,7 +121,11 @@ class UserController extends Controller
 
     protected function syncRoleAndPermissions(User $user, string $role, array $permissions): void
     {
-        $user->syncRoles([$role]);
+        $teamKey = config('permission.column_names.team_foreign_key');
+        $roleModel = Role::where('name', $role)
+            ->where($teamKey, app(CurrentEntreprise::class)->get()->getKey())
+            ->firstOrFail();
+        $user->syncRoles([$roleModel]);
 
         if ($role === 'administrateur') {
             $user->syncPermissions(Permission::all());

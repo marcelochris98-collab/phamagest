@@ -6,12 +6,15 @@ use App\Support\CurrentEntreprise;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
+use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetCurrentEntreprise
 {
     public function handle(Request $request, Closure $next): Response
     {
+        app(PermissionRegistrar::class)->setPermissionsTeamId(null);
+
         $entreprises = $request->user()
             ->entreprises()
             ->orderBy('nom')
@@ -36,6 +39,7 @@ class SetCurrentEntreprise
         }
 
         app(CurrentEntreprise::class)->set($entreprise);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($entreprise->getKey());
         $request->attributes->set('currentEntreprise', $entreprise);
         View::share('activeEntreprise', $entreprise);
         View::share('availableEntreprises', $entreprises);

@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 class TenantDataIsolationTest extends TestCase
@@ -96,9 +97,11 @@ class TenantDataIsolationTest extends TestCase
         $otherUser = User::factory()->create();
         $admin->entreprises()->attach($firstEntreprise);
         $otherUser->entreprises()->attach($secondEntreprise);
+        app(PermissionRegistrar::class)->setPermissionsTeamId($firstEntreprise->id);
         $admin->assignRole(Role::create([
             'name' => 'administrateur',
             'guard_name' => 'web',
+            'team_id' => $firstEntreprise->id,
         ]));
 
         $this->actingAs($admin)
@@ -108,6 +111,59 @@ class TenantDataIsolationTest extends TestCase
 
         $this->get(route('admin.users.edit', $otherUser))
             ->assertNotFound();
+    }
+
+    public function test_a_users_role_in_one_company_does_not_apply_to_another(): void
+    {
+        $firstEntreprise = $this->createEntreprise('Entreprise A', 'entreprise-a');
+        $secondEntreprise = $this->createEntreprise('Entreprise B', 'entreprise-b');
+        $user = User::factory()->create();
+        $user->entreprises()->attach([$firstEntreprise->id, $secondEntreprise->id]);
+
+        $registrar = app(PermissionRegistrar::class);
+        $registrar->setPermissionsTeamId($firstEntreprise->id);
+        $administrator = Role::create([
+            'name' => 'administrateur',
+            'guard_name' => 'web',
+            'team_id' => $firstEntreprise->id,
+        ]);
+        $user->assignRole($administrator);
+        $this->assertTrue($user->fresh()->hasRole('administrateur'));
+
+        $registrar->setPermissionsTeamId($secondEntreprise->id);
+        $this->assertFalse($user->fresh()->hasRole('administrateur'));
+    }
+
+    public function test_removing_a_user_from_one_company_preserves_their_other_memberships(): void
+    {
+        $firstEntreprise = $this->createEntreprise('Entreprise A', 'entreprise-a');
+        $secondEntreprise = $this->createEntreprise('Entreprise B', 'entreprise-b');
+        $admin = User::factory()->create();
+        $member = User::factory()->create();
+        $admin->entreprises()->attach($firstEntreprise);
+        $member->entreprises()->attach([$firstEntreprise->id, $secondEntreprise->id]);
+
+        $registrar = app(PermissionRegistrar::class);
+        $registrar->setPermissionsTeamId($firstEntreprise->id);
+        $admin->assignRole(Role::create([
+            'name' => 'administrateur',
+            'guard_name' => 'web',
+            'team_id' => $firstEntreprise->id,
+        ]));
+
+        $this->actingAs($admin)
+            ->delete(route('admin.users.destroy', $member))
+            ->assertRedirect(route('admin.users.index'));
+
+        $this->assertDatabaseHas('users', ['id' => $member->id]);
+        $this->assertDatabaseMissing('entreprise_user', [
+            'user_id' => $member->id,
+            'entreprise_id' => $firstEntreprise->id,
+        ]);
+        $this->assertDatabaseHas('entreprise_user', [
+            'user_id' => $member->id,
+            'entreprise_id' => $secondEntreprise->id,
+        ]);
     }
 
     private function createEntreprise(string $nom, string $slug): Entreprise
