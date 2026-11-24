@@ -37,19 +37,9 @@
                 @csrf
                 <h3 class="font-semibold text-slate-900">Renvoyer le dossier corrigé</h3>
                 <div>
-                    <label for="numero_enregistrement" class="text-sm font-medium text-slate-700">Numéro d’enregistrement</label>
-                    <input id="numero_enregistrement" name="numero_enregistrement" required value="{{ old('numero_enregistrement', $entreprise->numero_enregistrement) }}" class="mt-1 block w-full rounded-xl border-slate-300">
-                    @error('numero_enregistrement')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
                     <label for="document_enregistrement" class="text-sm font-medium text-slate-700">Justificatif d’enregistrement (facultatif)</label>
                     <input id="document_enregistrement" name="document_enregistrement" type="file" accept=".pdf,.jpg,.jpeg,.png" class="mt-1 block w-full text-sm">
                     @error('document_enregistrement')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-                </div>
-                <div>
-                    <label for="numero_autorisation" class="text-sm font-medium text-slate-700">Numéro d’autorisation</label>
-                    <input id="numero_autorisation" name="numero_autorisation" required value="{{ old('numero_autorisation', $entreprise->numero_autorisation) }}" class="mt-1 block w-full rounded-xl border-slate-300">
-                    @error('numero_autorisation')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="document_autorisation" class="text-sm font-medium text-slate-700">Justificatif d’autorisation (facultatif)</label>

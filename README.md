@@ -46,7 +46,7 @@ npm install && npm run build
 ## Accès multi-entreprises
 
 - La page `/register` crée un espace entreprise et son premier compte administrateur.
-- L’inscription demande les coordonnées et numéros de l’entreprise, mais aucun justificatif n’est requis pendant la phase de tests utilisateurs. Les justificatifs peuvent être ajoutés lors d’une demande de correction.
+- L’inscription demande seulement les coordonnées de l’entreprise et de son administrateur. Aucun numéro légal ni justificatif n’est requis pendant la phase de tests utilisateurs.
 - Les nouvelles entreprises restent en attente; un administrateur plateforme examine manuellement la demande et peut l’approuver sans justificatifs pour démarrer l’essai gratuit.
 - Une adresse e-mail ne peut créer qu'un compte. L'administrateur peut ensuite créer les comptes employés depuis **Administration → Utilisateurs** et leur attribuer un rôle dans son entreprise.
 - La connexion se fait sur `/login`. Si un compte appartient à plusieurs entreprises, l'application demande de choisir l'espace actif.

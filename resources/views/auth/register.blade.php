@@ -67,17 +67,6 @@
                     <x-input-error :messages="$errors->get('entreprise_adresse')" class="mt-2" />
                 </div>
 
-                <div>
-                    <x-input-label for="numero_enregistrement" value="Numéro d’enregistrement" class="text-slate-700" />
-                    <x-text-input id="numero_enregistrement" class="mt-2 block w-full rounded-xl border-slate-200 text-sm shadow-sm focus:border-emerald-600 focus:ring-emerald-600" type="text" name="numero_enregistrement" :value="old('numero_enregistrement')" required />
-                    <x-input-error :messages="$errors->get('numero_enregistrement')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="numero_autorisation" value="Numéro d’autorisation pharmaceutique" class="text-slate-700" />
-                    <x-text-input id="numero_autorisation" class="mt-2 block w-full rounded-xl border-slate-200 text-sm shadow-sm focus:border-emerald-600 focus:ring-emerald-600" type="text" name="numero_autorisation" :value="old('numero_autorisation')" required />
-                    <x-input-error :messages="$errors->get('numero_autorisation')" class="mt-2" />
-                </div>
             </div>
         </section>
 

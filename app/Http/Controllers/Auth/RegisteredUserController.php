@@ -33,8 +33,8 @@ class RegisteredUserController extends Controller
             'entreprise_email' => ['nullable', 'email', 'max:255'],
             'entreprise_telephone' => ['nullable', 'string', 'max:30'],
             'entreprise_adresse' => ['nullable', 'string', 'max:1000'],
-            'numero_enregistrement' => ['required', 'string', 'max:100'],
-            'numero_autorisation' => ['required', 'string', 'max:100'],
+            'numero_enregistrement' => ['nullable', 'string', 'max:100'],
+            'numero_autorisation' => ['nullable', 'string', 'max:100'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
@@ -47,8 +47,8 @@ class RegisteredUserController extends Controller
                 'email' => $validated['entreprise_email'] ?? null,
                 'telephone' => $validated['entreprise_telephone'] ?? null,
                 'adresse' => $validated['entreprise_adresse'] ?? null,
-                'numero_enregistrement' => $validated['numero_enregistrement'],
-                'numero_autorisation' => $validated['numero_autorisation'],
+                'numero_enregistrement' => $validated['numero_enregistrement'] ?? null,
+                'numero_autorisation' => $validated['numero_autorisation'] ?? null,
             ]);
 
             $user = User::create([

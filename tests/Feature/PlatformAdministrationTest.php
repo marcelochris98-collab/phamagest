@@ -61,13 +61,12 @@ class PlatformAdministrationTest extends TestCase
 
         $this->actingAs($user)
             ->post(route('entreprise.verification.resubmit'), [
-                'numero_enregistrement' => 'RC-UPDATED',
-                'numero_autorisation' => 'AUT-UPDATED',
             ])
             ->assertRedirect(route('entreprise.verification.status'));
 
         $this->assertSame('pending', $entreprise->fresh()->verification_status);
-        $this->assertSame('RC-UPDATED', $entreprise->fresh()->numero_enregistrement);
+        $this->assertNull($entreprise->fresh()->numero_enregistrement);
+        $this->assertNull($entreprise->fresh()->numero_autorisation);
         $this->assertDatabaseCount('entreprise_documents', 0);
     }
 

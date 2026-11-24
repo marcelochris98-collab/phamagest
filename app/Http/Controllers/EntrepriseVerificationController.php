@@ -26,16 +26,16 @@ class EntrepriseVerificationController extends Controller
         abort_unless($entreprise->verification_status === 'rejected', 403);
 
         $validated = $request->validate([
-            'numero_enregistrement' => ['required', 'string', 'max:100'],
-            'numero_autorisation' => ['required', 'string', 'max:100'],
+            'numero_enregistrement' => ['nullable', 'string', 'max:100'],
+            'numero_autorisation' => ['nullable', 'string', 'max:100'],
             'document_enregistrement' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
             'document_autorisation' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $entreprise) {
             $entreprise->update([
-                'numero_enregistrement' => $validated['numero_enregistrement'],
-                'numero_autorisation' => $validated['numero_autorisation'],
+                'numero_enregistrement' => $validated['numero_enregistrement'] ?? $entreprise->numero_enregistrement,
+                'numero_autorisation' => $validated['numero_autorisation'] ?? $entreprise->numero_autorisation,
                 'verification_status' => 'pending',
                 'verification_note' => null,
                 'verified_at' => null,

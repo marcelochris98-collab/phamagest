@@ -13,7 +13,6 @@
                     <h2 class="text-lg font-semibold">{{ $entreprise->nom }}</h2>
                     <p class="mt-1 text-sm text-slate-500">{{ $entreprise->email ?: 'Pas d’e-mail entreprise' }} · {{ $entreprise->users_count }} utilisateur(s)</p>
                     <p class="mt-2 text-sm">Vérification : <strong>{{ $entreprise->verification_status }}</strong> · Abonnement : <strong>{{ $entreprise->subscription_status }}</strong></p>
-                    <p class="mt-1 text-sm text-slate-600">Registre : {{ $entreprise->numero_enregistrement ?: '—' }} · Autorisation : {{ $entreprise->numero_autorisation ?: '—' }}</p>
                     @if ($entreprise->verification_note)
                         <p class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{{ $entreprise->verification_note }}</p>
                     @endif
