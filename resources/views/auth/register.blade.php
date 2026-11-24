@@ -27,10 +27,10 @@
             <path d="M12 3 19 6v5c0 4.7-3 8-7 10-4-2-7-5.3-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <p>Votre dossier sera vérifié avant l’activation de l’espace. Préparez les justificatifs d’enregistrement et d’autorisation.</p>
+        <p>Créez votre espace sans envoyer de justificatifs pour le moment. L’équipe PharmaGest examinera votre demande avant l’activation.</p>
     </div>
 
-    <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="space-y-6">
+    <form method="POST" action="{{ route('register') }}" class="space-y-6">
         @csrf
 
         <section aria-labelledby="company-information-heading">
@@ -81,32 +81,9 @@
             </div>
         </section>
 
-        <section aria-labelledby="company-documents-heading" class="border-t border-slate-100 pt-6">
-            <div class="mb-4 flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-xs font-bold text-emerald-800">02</span>
-                <div>
-                    <h2 id="company-documents-heading" class="text-sm font-semibold text-slate-900">Justificatifs de l’entreprise</h2>
-                    <p class="text-xs text-slate-500">PDF, JPG ou PNG · 10 Mo maximum par fichier</p>
-                </div>
-            </div>
-
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                    <x-input-label for="document_enregistrement" value="Justificatif d’enregistrement" class="text-slate-700" />
-                    <input id="document_enregistrement" class="mt-2 block w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-emerald-800" type="file" name="document_enregistrement" accept=".pdf,.jpg,.jpeg,.png" required />
-                    <x-input-error :messages="$errors->get('document_enregistrement')" class="mt-2" />
-                </div>
-                <div>
-                    <x-input-label for="document_autorisation" value="Justificatif d’autorisation" class="text-slate-700" />
-                    <input id="document_autorisation" class="mt-2 block w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-emerald-800" type="file" name="document_autorisation" accept=".pdf,.jpg,.jpeg,.png" required />
-                    <x-input-error :messages="$errors->get('document_autorisation')" class="mt-2" />
-                </div>
-            </div>
-        </section>
-
         <section aria-labelledby="administrator-heading" class="border-t border-slate-100 pt-6">
             <div class="mb-4 flex items-center gap-3">
-                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-xs font-bold text-emerald-800">03</span>
+                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-xs font-bold text-emerald-800">02</span>
                 <div>
                     <h2 id="administrator-heading" class="text-sm font-semibold text-slate-900">Compte administrateur</h2>
                     <p class="text-xs text-slate-500">Ce compte gérera l’espace de l’entreprise</p>

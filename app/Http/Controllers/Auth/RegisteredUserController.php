@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Entreprise;
-use App\Models\EntrepriseDocument;
 use App\Models\User;
 use App\Services\EntrepriseRoleService;
 use Illuminate\Auth\Events\Registered;
@@ -15,7 +14,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
-use RuntimeException;
 use Spatie\Permission\PermissionRegistrar;
 
 class RegisteredUserController extends Controller
@@ -37,14 +35,12 @@ class RegisteredUserController extends Controller
             'entreprise_adresse' => ['nullable', 'string', 'max:1000'],
             'numero_enregistrement' => ['required', 'string', 'max:100'],
             'numero_autorisation' => ['required', 'string', 'max:100'],
-            'document_enregistrement' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-            'document_autorisation' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        [$entreprise, $user] = DB::transaction(function () use ($validated, $request) {
+        [$entreprise, $user] = DB::transaction(function () use ($validated) {
             $entreprise = Entreprise::create([
                 'nom' => $validated['entreprise'],
                 'slug' => Str::slug($validated['entreprise']).'-'.Str::lower((string) Str::ulid()),
@@ -67,28 +63,6 @@ class RegisteredUserController extends Controller
             $administrator = app(EntrepriseRoleService::class)->createDefaultRoles($entreprise);
             $user->assignRole($administrator);
             $registrar->forgetCachedPermissions();
-
-            foreach ([
-                'document_enregistrement' => 'enregistrement',
-                'document_autorisation' => 'autorisation',
-            ] as $field => $type) {
-                $file = $request->file($field);
-                $path = $file->store("private/entreprise-documents/{$entreprise->id}", 'local');
-
-                if (! $path) {
-                    throw new RuntimeException('Un justificatif n’a pas pu être enregistré.');
-                }
-
-                EntrepriseDocument::create([
-                    'entreprise_id' => $entreprise->id,
-                    'uploaded_by' => $user->id,
-                    'type' => $type,
-                    'path' => $path,
-                    'original_name' => $file->getClientOriginalName(),
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'size' => $file->getSize(),
-                ]);
-            }
 
             return [$entreprise, $user];
         });

@@ -26,6 +26,9 @@
                     @endforeach
                 </div>
             </div>
+            @if ($entreprise->documents->isEmpty())
+                <p class="mt-3 text-sm text-slate-500">Aucun justificatif fourni. L’approbation manuelle reste possible.</p>
+            @endif
 
             @if ($entreprise->verification_status === 'pending')
                 <div class="mt-6 grid gap-4 border-t border-slate-100 pt-5 md:grid-cols-2">

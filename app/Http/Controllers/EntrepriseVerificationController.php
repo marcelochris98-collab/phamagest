@@ -28,8 +28,8 @@ class EntrepriseVerificationController extends Controller
         $validated = $request->validate([
             'numero_enregistrement' => ['required', 'string', 'max:100'],
             'numero_autorisation' => ['required', 'string', 'max:100'],
-            'document_enregistrement' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
-            'document_autorisation' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'document_enregistrement' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+            'document_autorisation' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
 
         DB::transaction(function () use ($validated, $request, $entreprise) {
@@ -42,8 +42,14 @@ class EntrepriseVerificationController extends Controller
                 'verified_by' => null,
             ]);
 
-            $this->storeDocument($entreprise->id, $request, 'document_enregistrement', 'enregistrement');
-            $this->storeDocument($entreprise->id, $request, 'document_autorisation', 'autorisation');
+            foreach ([
+                'document_enregistrement' => 'enregistrement',
+                'document_autorisation' => 'autorisation',
+            ] as $field => $type) {
+                if ($request->hasFile($field)) {
+                    $this->storeDocument($entreprise->id, $request, $field, $type);
+                }
+            }
         });
 
         return redirect()->route('entreprise.verification.status')

@@ -27,9 +27,8 @@ class PlatformAdministrationTest extends TestCase
         $this->get(route('platform.companies.index'))->assertOk();
     }
 
-    public function test_approving_a_company_starts_a_trial_after_required_documents_are_present(): void
+    public function test_approving_a_company_starts_a_trial_without_documents(): void
     {
-        Storage::fake('local');
         $admin = User::factory()->create();
         $admin->forceFill(['is_platform_admin' => true])->save();
         $entreprise = $this->createPendingCompany();
@@ -46,33 +45,36 @@ class PlatformAdministrationTest extends TestCase
         $this->assertSame('trial', $entreprise->subscription_status);
         $this->assertTrue($entreprise->trial_ends_at->isFuture());
         $this->assertSame($admin->id, $entreprise->verified_by);
+        $this->assertDatabaseCount('entreprise_documents', 0);
         $this->get(route('platform.companies.index'))
             ->assertOk()
+            ->assertSee('Aucun justificatif fourni')
             ->assertSee('Historique des actions plateforme')
             ->assertSee($admin->email);
     }
 
-    public function test_a_company_without_both_documents_cannot_be_approved(): void
+    public function test_rejected_company_can_resubmit_without_documents(): void
     {
-        $admin = User::factory()->create();
-        $admin->forceFill(['is_platform_admin' => true])->save();
-        $entreprise = Entreprise::create([
-            'nom' => 'Entreprise Incomplète',
-            'slug' => 'entreprise-incomplete',
-        ]);
+        $entreprise = $this->createPendingCompany();
+        $entreprise->update(['verification_status' => 'rejected']);
+        $user = $entreprise->users()->firstOrFail();
 
-        $this->actingAs($admin)
-            ->from(route('platform.companies.index'))
-            ->post(route('platform.companies.approve', $entreprise), ['trial_days' => 14])
-            ->assertStatus(422);
+        $this->actingAs($user)
+            ->post(route('entreprise.verification.resubmit'), [
+                'numero_enregistrement' => 'RC-UPDATED',
+                'numero_autorisation' => 'AUT-UPDATED',
+            ])
+            ->assertRedirect(route('entreprise.verification.status'));
 
         $this->assertSame('pending', $entreprise->fresh()->verification_status);
+        $this->assertSame('RC-UPDATED', $entreprise->fresh()->numero_enregistrement);
+        $this->assertDatabaseCount('entreprise_documents', 0);
     }
 
     public function test_only_platform_administrators_can_download_private_company_documents(): void
     {
         Storage::fake('local');
-        $entreprise = $this->createPendingCompany();
+        $entreprise = $this->createPendingCompany(withDocuments: true);
         $document = $entreprise->documents()->firstOrFail();
         Storage::disk('local')->put($document->path, 'private document');
         $user = User::factory()->create();
@@ -129,7 +131,7 @@ class PlatformAdministrationTest extends TestCase
         $this->assertTrue($user->fresh()->isPlatformAdmin());
     }
 
-    private function createPendingCompany(): Entreprise
+    private function createPendingCompany(bool $withDocuments = false): Entreprise
     {
         $entreprise = Entreprise::create([
             'nom' => 'Entreprise Test',
@@ -149,15 +151,17 @@ class PlatformAdministrationTest extends TestCase
         ]);
         $user->assignRole($role);
 
-        foreach (['enregistrement', 'autorisation'] as $type) {
-            $entreprise->documents()->create([
-                'uploaded_by' => $user->id,
-                'type' => $type,
-                'path' => "private/entreprise-documents/{$entreprise->id}/{$type}.pdf",
-                'original_name' => "{$type}.pdf",
-                'mime_type' => 'application/pdf',
-                'size' => 100,
-            ]);
+        if ($withDocuments) {
+            foreach (['enregistrement', 'autorisation'] as $type) {
+                $entreprise->documents()->create([
+                    'uploaded_by' => $user->id,
+                    'type' => $type,
+                    'path' => "private/entreprise-documents/{$entreprise->id}/{$type}.pdf",
+                    'original_name' => "{$type}.pdf",
+                    'mime_type' => 'application/pdf',
+                    'size' => 100,
+                ]);
+            }
         }
 
         return $entreprise;

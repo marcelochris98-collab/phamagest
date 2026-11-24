@@ -46,13 +46,13 @@ npm install && npm run build
 ## Accès multi-entreprises
 
 - La page `/register` crée un espace entreprise et son premier compte administrateur.
-- L’inscription demande les numéros et justificatifs d’enregistrement et d’autorisation applicables; les fichiers restent privés dans `storage/app/private`.
-- Les nouvelles entreprises restent en attente; un administrateur plateforme doit examiner les documents avant d’approuver le compte et de démarrer l’essai gratuit.
+- L’inscription demande les coordonnées et numéros de l’entreprise, mais aucun justificatif n’est requis pendant la phase de tests utilisateurs. Les justificatifs peuvent être ajoutés lors d’une demande de correction.
+- Les nouvelles entreprises restent en attente; un administrateur plateforme examine manuellement la demande et peut l’approuver sans justificatifs pour démarrer l’essai gratuit.
 - Une adresse e-mail ne peut créer qu'un compte. L'administrateur peut ensuite créer les comptes employés depuis **Administration → Utilisateurs** et leur attribuer un rôle dans son entreprise.
 - La connexion se fait sur `/login`. Si un compte appartient à plusieurs entreprises, l'application demande de choisir l'espace actif.
 - La vérification de l'adresse e-mail est requise avant d'accéder à l'application. En local, le message de vérification est écrit dans les logs Laravel avec `MAIL_MAILER=log`; en production, configurez un fournisseur de messagerie SMTP et vérifiez sa délivrabilité.
 - Les données métier et les rôles sont séparés par entreprise. L'inscription libre ne vérifie toutefois pas encore l'identité légale ou l'autorisation pharmaceutique de l'entreprise.
-- L’administration plateforme (`/platform/companies`) est réservée aux comptes promus manuellement avec `php artisan platform:admin adresse@example.com`. Cette commande demande confirmation. Elle permet de consulter les dossiers, télécharger les justificatifs privés, approuver ou refuser une demande, et gérer l’essai/l’abonnement. Les décisions sont journalisées.
+- L’administration plateforme (`/platform/companies`) est réservée aux comptes promus manuellement avec `php artisan platform:admin adresse@example.com`. Cette commande demande confirmation. Elle permet de consulter les dossiers, télécharger les justificatifs privés éventuellement fournis, approuver ou refuser une demande, et gérer l’essai/l’abonnement. Les décisions sont journalisées.
 - Les abonnements sont gérés manuellement; aucun paiement en ligne ni facturation récurrente n’est branché.
 
 ### Sauvegardes et restauration (MySQL/MariaDB)

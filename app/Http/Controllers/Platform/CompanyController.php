@@ -34,13 +34,6 @@ class CompanyController extends Controller
             'trial_days' => ['required', 'integer', 'min:1', 'max:90'],
         ]);
 
-        abort_if(
-            ! $entreprise->documents()->where('type', 'enregistrement')->exists()
-            || ! $entreprise->documents()->where('type', 'autorisation')->exists(),
-            422,
-            'Les deux justificatifs doivent être présents avant l’approbation.'
-        );
-
         DB::transaction(function () use ($request, $entreprise, $validated) {
             $before = $entreprise->only(['verification_status', 'subscription_status', 'trial_ends_at']);
             $entreprise->update([
