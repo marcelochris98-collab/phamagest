@@ -6,6 +6,7 @@ use App\Enums\ClientType;
 use App\Enums\CommandeStatut;
 use App\Models\Client;
 use App\Models\Commande;
+use App\Models\Entreprise;
 use App\Models\Fournisseur;
 use App\Models\Medicament;
 use App\Models\User;
@@ -16,7 +17,13 @@ class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
+        $entreprise = Entreprise::firstOrCreate(
+            ['slug' => 'phamagest'],
+            ['nom' => 'PharmaGest']
+        );
+
         $fournisseur = Fournisseur::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Laboratoires Centrafrique',
             'pays' => 'France',
             'contact' => 'Service export',
@@ -25,6 +32,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         $med1 = Medicament::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Paracétamol 500mg',
             'dci' => 'Paracétamol',
             'forme' => 'Comprimé',
@@ -36,6 +44,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         $med2 = Medicament::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Amoxicilline 1g',
             'dci' => 'Amoxicilline',
             'forme' => 'Gélule',
@@ -47,6 +56,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         Medicament::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Ibuprofène 400mg',
             'dci' => 'Ibuprofène',
             'forme' => 'Comprimé',
@@ -58,6 +68,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         Client::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Pharmacie du Centre',
             'type' => ClientType::Pharmacie,
             'adresse' => 'Akwa, Douala',
@@ -65,6 +76,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         Client::create([
+            'entreprise_id' => $entreprise->id,
             'nom' => 'Clinique La Paix',
             'type' => ClientType::Clinique,
             'adresse' => 'Bonanjo, Douala',
@@ -72,6 +84,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         $commande = Commande::create([
+            'entreprise_id' => $entreprise->id,
             'fournisseur_id' => $fournisseur->id,
             'statut' => CommandeStatut::EnAttente,
             'date_commande' => now(),
@@ -79,12 +92,14 @@ class DemoDataSeeder extends Seeder
         ]);
 
         $commande->items()->create([
+            'entreprise_id' => $entreprise->id,
             'medicament_id' => $med1->id,
             'quantite' => 200,
             'prix_unitaire' => 150,
         ]);
 
         $commande->items()->create([
+            'entreprise_id' => $entreprise->id,
             'medicament_id' => $med2->id,
             'quantite' => 100,
             'prix_unitaire' => 850,
@@ -99,6 +114,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
         $magasinier->syncRoles(['magasinier']);
+        $magasinier->entreprises()->syncWithoutDetaching([$entreprise->id]);
 
         $vendeur = User::firstOrCreate(
             ['email' => 'vendeur@phamagest.cm'],
@@ -109,5 +125,6 @@ class DemoDataSeeder extends Seeder
             ]
         );
         $vendeur->syncRoles(['vendeur']);
+        $vendeur->entreprises()->syncWithoutDetaching([$entreprise->id]);
     }
 }

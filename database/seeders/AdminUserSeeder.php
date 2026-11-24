@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Entreprise;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -10,6 +11,11 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
+        $entreprise = Entreprise::firstOrCreate(
+            ['slug' => 'phamagest'],
+            ['nom' => 'PharmaGest']
+        );
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@phamagest.cm'],
             [
@@ -20,5 +26,6 @@ class AdminUserSeeder extends Seeder
         );
 
         $admin->syncRoles(['administrateur']);
+        $admin->entreprises()->syncWithoutDetaching([$entreprise->id]);
     }
 }
