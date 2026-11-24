@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Entreprise;
 use App\Models\User;
 use App\Services\EntrepriseRoleService;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -49,6 +48,10 @@ class RegisteredUserController extends Controller
                 'adresse' => $validated['entreprise_adresse'] ?? null,
                 'numero_enregistrement' => $validated['numero_enregistrement'] ?? null,
                 'numero_autorisation' => $validated['numero_autorisation'] ?? null,
+                'verification_status' => 'approved',
+                'verified_at' => now(),
+                'subscription_status' => 'trial',
+                'trial_ends_at' => now()->addMonth(),
             ]);
 
             $user = User::create([
@@ -67,12 +70,10 @@ class RegisteredUserController extends Controller
             return [$entreprise, $user];
         });
 
-        event(new Registered($user));
-
         Auth::login($user);
         $request->session()->regenerate();
         $request->session()->put('active_entreprise_id', $entreprise->getKey());
 
-        return redirect()->route('entreprise.verification.status');
+        return redirect()->route('dashboard');
     }
 }

@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'verified', 'entreprise', 'entreprise.access', 'role:administrateur'])
+Route::middleware(['auth', 'entreprise', 'entreprise.access', 'role:administrateur'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {

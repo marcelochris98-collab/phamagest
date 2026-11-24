@@ -27,7 +27,7 @@
             <path d="M12 3 19 6v5c0 4.7-3 8-7 10-4-2-7-5.3-7-10V6l7-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
             <path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <p>Créez votre espace sans envoyer de justificatifs pour le moment. L’équipe PharmaGest examinera votre demande avant l’activation.</p>
+        <p>Créez votre espace et commencez immédiatement votre essai gratuit d’un mois. Aucun justificatif n’est requis.</p>
     </div>
 
     <form method="POST" action="{{ route('register') }}" class="space-y-6">
@@ -107,7 +107,7 @@
         </section>
 
         <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 active:scale-[0.99]">
-            Envoyer le dossier de l’entreprise
+            Créer mon espace et démarrer l’essai
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>

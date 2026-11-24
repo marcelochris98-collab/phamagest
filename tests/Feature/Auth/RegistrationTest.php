@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\Entreprise;
 use App\Models\User;
-use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\PermissionRegistrar;
@@ -27,6 +26,7 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register_without_legal_identifiers_or_documents(): void
     {
+        $this->travelTo(now()->startOfSecond());
         Notification::fake();
 
         $response = $this->post('/register', [
@@ -39,7 +39,7 @@ class RegistrationTest extends TestCase
 
         $response->assertSessionHasNoErrors();
         $this->assertAuthenticated();
-        $response->assertRedirect(route('entreprise.verification.status'));
+        $response->assertRedirect(route('dashboard'));
 
         $entreprise = Entreprise::where('nom', 'Pharmacie Test')->firstOrFail();
         $user = User::where('email', 'test@example.com')->firstOrFail();
@@ -48,10 +48,14 @@ class RegistrationTest extends TestCase
         app(PermissionRegistrar::class)->setPermissionsTeamId($entreprise->id);
         $this->assertTrue($user->hasRole('administrateur'));
         $this->assertFalse($user->hasVerifiedEmail());
-        Notification::assertSentTo($user, VerifyEmail::class);
-        $this->assertSame('pending', $entreprise->verification_status);
+        $this->assertSame('approved', $entreprise->verification_status);
+        $this->assertSame('trial', $entreprise->subscription_status);
+        $this->assertTrue($entreprise->trial_ends_at->equalTo(now()->addMonth()));
         $this->assertNull($entreprise->numero_enregistrement);
         $this->assertNull($entreprise->numero_autorisation);
         $this->assertDatabaseCount('entreprise_documents', 0);
+        $this->get(route('dashboard'))->assertOk();
+        $this->get(route('admin.users.index'))->assertOk();
+        Notification::assertNothingSent();
     }
 }

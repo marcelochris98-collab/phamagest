@@ -30,7 +30,7 @@ Route::middleware('auth')->group(function () {
         ->name('entreprise.active');
 });
 
-Route::middleware(['auth', 'verified', 'entreprise'])->group(function () {
+Route::middleware(['auth', 'entreprise'])->group(function () {
     Route::get('/entreprise/verification', [EntrepriseVerificationController::class, 'show'])
         ->name('entreprise.verification.status');
     Route::post('/entreprise/verification', [EntrepriseVerificationController::class, 'resubmit'])
@@ -40,13 +40,13 @@ Route::middleware(['auth', 'verified', 'entreprise'])->group(function () {
         ->name('entreprise.subscription.status');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified', 'entreprise', 'entreprise.access'])->group(function () {
+Route::middleware(['auth', 'entreprise', 'entreprise.access'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('permission:dashboard.view')
         ->name('dashboard');
