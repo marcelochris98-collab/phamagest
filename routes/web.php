@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntrepriseContextController;
+use App\Http\Controllers\EntrepriseVerificationController;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\MedicamentController;
 use App\Http\Controllers\ProfileController;
@@ -12,6 +13,11 @@ use App\Http\Controllers\VenteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+    if (auth()->user()?->isPlatformAdmin()
+        && ! auth()->user()->entreprises()->exists()) {
+        return redirect()->route('platform.companies.index');
+    }
+
     return auth()->check()
         ? redirect()->route('dashboard')
         : redirect()->route('login');
@@ -24,13 +30,23 @@ Route::middleware('auth')->group(function () {
         ->name('entreprise.active');
 });
 
+Route::middleware(['auth', 'verified', 'entreprise'])->group(function () {
+    Route::get('/entreprise/verification', [EntrepriseVerificationController::class, 'show'])
+        ->name('entreprise.verification.status');
+    Route::post('/entreprise/verification', [EntrepriseVerificationController::class, 'resubmit'])
+        ->middleware('role:administrateur')
+        ->name('entreprise.verification.resubmit');
+    Route::view('/entreprise/abonnement', 'entreprises.subscription-status')
+        ->name('entreprise.subscription.status');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified', 'entreprise'])->group(function () {
+Route::middleware(['auth', 'verified', 'entreprise', 'entreprise.access'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('permission:dashboard.view')
         ->name('dashboard');

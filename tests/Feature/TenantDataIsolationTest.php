@@ -171,6 +171,8 @@ class TenantDataIsolationTest extends TestCase
         return Entreprise::create([
             'nom' => $nom,
             'slug' => $slug,
+            'verification_status' => 'approved',
+            'subscription_status' => 'active',
         ]);
     }
 

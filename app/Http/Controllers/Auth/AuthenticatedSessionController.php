@@ -29,7 +29,12 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('active_entreprise_id');
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $user = $request->user();
+        $destination = $user->isPlatformAdmin() && ! $user->entreprises()->exists()
+            ? route('platform.companies.index')
+            : route('dashboard', absolute: false);
+
+        return redirect()->intended($destination);
     }
 
     /**

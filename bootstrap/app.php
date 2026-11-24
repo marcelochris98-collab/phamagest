@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureEntrepriseAccess;
+use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\SetCurrentEntreprise;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
+            Route::middleware('web')
+                ->group(base_path('routes/platform.php'));
         },
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
@@ -23,6 +27,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'entreprise' => SetCurrentEntreprise::class,
+            'entreprise.access' => EnsureEntrepriseAccess::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

@@ -2,7 +2,7 @@
     <h2 class="mb-2 text-lg font-semibold text-slate-900">Créer votre espace entreprise</h2>
     <p class="mb-6 text-sm text-slate-500">Inscrivez votre entreprise et créez le compte de son administrateur.</p>
 
-    <form method="POST" action="{{ route('register') }}" class="space-y-5">
+    <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
 
         <div>
@@ -27,6 +27,30 @@
             <x-input-label for="entreprise_adresse" value="Adresse de l’entreprise (facultatif)" />
             <textarea id="entreprise_adresse" name="entreprise_adresse" rows="2" class="mt-2 block w-full rounded-xl border-slate-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500">{{ old('entreprise_adresse') }}</textarea>
             <x-input-error :messages="$errors->get('entreprise_adresse')" class="mt-2" />
+        </div>
+
+        <div>
+            <x-input-label for="numero_enregistrement" value="Numéro d’enregistrement de l’entreprise" />
+            <x-text-input id="numero_enregistrement" class="mt-2 block w-full rounded-xl" type="text" name="numero_enregistrement" :value="old('numero_enregistrement')" required />
+            <x-input-error :messages="$errors->get('numero_enregistrement')" class="mt-2" />
+        </div>
+
+        <div>
+            <x-input-label for="document_enregistrement" value="Justificatif d’enregistrement (PDF, JPG ou PNG, 10 Mo max.)" />
+            <input id="document_enregistrement" class="mt-2 block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:font-semibold file:text-emerald-700" type="file" name="document_enregistrement" accept=".pdf,.jpg,.jpeg,.png" required />
+            <x-input-error :messages="$errors->get('document_enregistrement')" class="mt-2" />
+        </div>
+
+        <div>
+            <x-input-label for="numero_autorisation" value="Numéro d’autorisation ou licence pharmaceutique" />
+            <x-text-input id="numero_autorisation" class="mt-2 block w-full rounded-xl" type="text" name="numero_autorisation" :value="old('numero_autorisation')" required />
+            <x-input-error :messages="$errors->get('numero_autorisation')" class="mt-2" />
+        </div>
+
+        <div>
+            <x-input-label for="document_autorisation" value="Justificatif d’autorisation (PDF, JPG ou PNG, 10 Mo max.)" />
+            <input id="document_autorisation" class="mt-2 block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:font-semibold file:text-emerald-700" type="file" name="document_autorisation" accept=".pdf,.jpg,.jpeg,.png" required />
+            <x-input-error :messages="$errors->get('document_autorisation')" class="mt-2" />
         </div>
 
         <div>

@@ -20,7 +20,7 @@ class CurrentEntrepriseTest extends TestCase
 
         $this->actingAs($user)
             ->get('/dashboard')
-            ->assertForbidden()
+            ->assertRedirect(route('entreprise.verification.status'))
             ->assertSessionHas('active_entreprise_id', $entreprise->id);
 
         $this->assertSame($entreprise->id, app(CurrentEntreprise::class)->get()->id);

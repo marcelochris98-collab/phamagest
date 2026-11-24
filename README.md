@@ -46,12 +46,29 @@ npm install && npm run build
 ## Accès multi-entreprises
 
 - La page `/register` crée un espace entreprise et son premier compte administrateur.
+- L’inscription demande les numéros et justificatifs d’enregistrement et d’autorisation applicables; les fichiers restent privés dans `storage/app/private`.
+- Les nouvelles entreprises restent en attente; un administrateur plateforme doit examiner les documents avant d’approuver le compte et de démarrer l’essai gratuit.
 - Une adresse e-mail ne peut créer qu'un compte. L'administrateur peut ensuite créer les comptes employés depuis **Administration → Utilisateurs** et leur attribuer un rôle dans son entreprise.
 - La connexion se fait sur `/login`. Si un compte appartient à plusieurs entreprises, l'application demande de choisir l'espace actif.
 - La vérification de l'adresse e-mail est requise avant d'accéder à l'application. En local, le message de vérification est écrit dans les logs Laravel avec `MAIL_MAILER=log`; en production, configurez un fournisseur de messagerie SMTP et vérifiez sa délivrabilité.
 - Les données métier et les rôles sont séparés par entreprise. L'inscription libre ne vérifie toutefois pas encore l'identité légale ou l'autorisation pharmaceutique de l'entreprise.
+- L’administration plateforme (`/platform/companies`) est réservée aux comptes promus manuellement avec `php artisan platform:admin adresse@example.com`. Cette commande demande confirmation. Elle permet de consulter les dossiers, télécharger les justificatifs privés, approuver ou refuser une demande, et gérer l’essai/l’abonnement. Les décisions sont journalisées.
+- Les abonnements sont gérés manuellement; aucun paiement en ligne ni facturation récurrente n’est branché.
 
-Avant une mise en production, configurez un vrai domaine HTTPS, les courriels, les sauvegardes/restaurations et le suivi opérationnel. L'application n'inclut pas encore de facturation/abonnement SaaS ni de vérification réglementaire des entreprises.
+### Sauvegardes et restauration (MySQL/MariaDB)
+
+- `php artisan database:backup` crée un fichier `.sql.gz` sous `storage/app/private/backups` par défaut. Pour un stockage hors site S3-compatible (S3 ou Cloudflare R2), configurez `BACKUP_DISK=s3` et les variables `AWS_*`; la rétention de 14 jours s’applique au disque sélectionné.
+- Le planificateur Laravel lance une sauvegarde à 02:00. Sur un serveur Linux, activez-le avec une tâche cron exécutant `php /chemin/vers/phamagest/artisan schedule:run` chaque minute.
+- Une restauration est destructive et uniquement disponible dans le terminal interactif : `php artisan database:restore phamagest-AAAAMMJJ-HHMMSS.sql.gz`. L’archive est lue depuis le disque configuré; l’opérateur doit confirmer et une sauvegarde pré-restauration est créée automatiquement avant import.
+- Les fichiers locaux ne protègent pas contre la panne ou la perte du serveur. Avant production, configurez un bucket hors site avec chiffrement côté fournisseur, des identifiants limités et une rétention, puis testez régulièrement la restauration sur une base isolée. Les archives restent des dumps SQL sensibles; ne les publiez jamais via `public/`.
+
+### Déploiement et services externes restant à choisir
+
+- Il n’y a pas encore d’hébergeur ni de domaine configuré. Un tunnel/sous-domaine gratuit peut servir à une démo temporaire seulement; il ne constitue pas un hébergement fiable ni une adresse de production. Un vrai HTTPS nécessite un domaine maîtrisé et un serveur public; Cloudflare peut fournir gratuitement un certificat TLS pour un domaine activé chez eux.
+- Configurez un fournisseur SMTP dans les variables `MAIL_*` du serveur pour la vérification d’adresse et les notifications. Le mode local `MAIL_MAILER=log` n’envoie pas de vrais e-mails.
+- Aucun paiement n’est intégré. Choisissez et ouvrez un compte auprès d’une passerelle compatible Cameroun avant de développer les webhooks de paiement.
+- Le contrôle documentaire est une revue manuelle interne, pas une certification réglementaire. Faites valider la liste exacte des justificatifs par un conseiller local compétent avant d’accepter de vraies pharmacies ou entreprises.
+- Avant toute ouverture publique : `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, clé APP protégée, sauvegarde hors site testée, SMTP vérifié, limites d’upload, supervision et procédure d’incident. Exécutez aussi `composer audit` et corrigez les avis avant déploiement : le framework Laravel 11 actuellement verrouillé est signalé par des avis connus, dont un critique; ne l’exposez pas en l’état.
 
 ## Parcours métier type
 

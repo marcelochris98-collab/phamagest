@@ -15,6 +15,12 @@
     </div>
 
     <div class="ml-auto flex items-center gap-3">
+        @if (auth()->user()->isPlatformAdmin())
+            <a href="{{ route('platform.companies.index') }}" class="rounded-xl px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50">
+                Plateforme
+            </a>
+        @endif
+
         @isset($activeEntreprise)
             @if ($availableEntreprises->count() > 1)
                 <form method="POST" action="{{ route('entreprise.active') }}" class="flex items-center gap-2">
