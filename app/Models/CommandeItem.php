@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToEntreprise;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CommandeItem extends Model
 {
-    use HasFactory;
+    use BelongsToEntreprise, HasFactory;
 
     protected $fillable = [
         'commande_id',
@@ -22,6 +23,14 @@ class CommandeItem extends Model
         return [
             'quantite' => 'integer',
             'prix_unitaire' => 'decimal:2',
+        ];
+    }
+
+    protected static function entrepriseForeignKeys(): array
+    {
+        return [
+            'commande_id' => Commande::class,
+            'medicament_id' => Medicament::class,
         ];
     }
 

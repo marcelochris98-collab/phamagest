@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Enums\MouvementStockType;
+use App\Models\Concerns\BelongsToEntreprise;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MouvementStock extends Model
 {
-    use HasFactory;
+    use BelongsToEntreprise, HasFactory;
 
     protected $table = 'mouvements_stock';
 
@@ -27,6 +28,13 @@ class MouvementStock extends Model
             'type' => MouvementStockType::class,
             'quantite' => 'integer',
             'date' => 'datetime',
+        ];
+    }
+
+    protected static function entrepriseForeignKeys(): array
+    {
+        return [
+            'medicament_id' => Medicament::class,
         ];
     }
 

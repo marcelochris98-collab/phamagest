@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CurrentEntreprise;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class VenteRequest extends FormRequest
 {
@@ -14,9 +16,17 @@ class VenteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', 'exists:clients,id'],
+            'client_id' => [
+                'required',
+                Rule::exists('clients', 'id')
+                    ->where('entreprise_id', app(CurrentEntreprise::class)->get()->getKey()),
+            ],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.medicament_id' => ['required', 'exists:medicaments,id'],
+            'items.*.medicament_id' => [
+                'required',
+                Rule::exists('medicaments', 'id')
+                    ->where('entreprise_id', app(CurrentEntreprise::class)->get()->getKey()),
+            ],
             'items.*.quantite' => ['required', 'integer', 'min:1'],
             'items.*.prix_unitaire' => ['required', 'numeric', 'min:0'],
         ];

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\VenteStatut;
+use App\Models\Concerns\BelongsToEntreprise;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vente extends Model
 {
-    use HasFactory;
+    use BelongsToEntreprise, HasFactory;
 
     protected $fillable = [
         'client_id',
@@ -27,6 +28,18 @@ class Vente extends Model
             'total' => 'decimal:2',
             'date_vente' => 'datetime',
         ];
+    }
+
+    protected static function entrepriseForeignKeys(): array
+    {
+        return [
+            'client_id' => Client::class,
+        ];
+    }
+
+    protected static function entrepriseMemberForeignKeys(): array
+    {
+        return ['user_id'];
     }
 
     public function client(): BelongsTo

@@ -10,6 +10,7 @@ use App\Models\Entreprise;
 use App\Models\Fournisseur;
 use App\Models\Medicament;
 use App\Models\User;
+use App\Support\CurrentEntreprise;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,6 +22,7 @@ class DemoDataSeeder extends Seeder
             ['slug' => 'phamagest'],
             ['nom' => 'PharmaGest']
         );
+        app(CurrentEntreprise::class)->set($entreprise);
 
         $fournisseur = Fournisseur::create([
             'entreprise_id' => $entreprise->id,

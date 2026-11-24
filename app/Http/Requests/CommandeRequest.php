@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CurrentEntreprise;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CommandeRequest extends FormRequest
 {
@@ -14,11 +16,19 @@ class CommandeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'fournisseur_id' => ['required', 'exists:fournisseurs,id'],
+            'fournisseur_id' => [
+                'required',
+                Rule::exists('fournisseurs', 'id')
+                    ->where('entreprise_id', app(CurrentEntreprise::class)->get()->getKey()),
+            ],
             'date_commande' => ['required', 'date'],
             'date_livraison_prevue' => ['nullable', 'date', 'after_or_equal:date_commande'],
             'items' => ['required', 'array', 'min:1'],
-            'items.*.medicament_id' => ['required', 'exists:medicaments,id'],
+            'items.*.medicament_id' => [
+                'required',
+                Rule::exists('medicaments', 'id')
+                    ->where('entreprise_id', app(CurrentEntreprise::class)->get()->getKey()),
+            ],
             'items.*.quantite' => ['required', 'integer', 'min:1'],
             'items.*.prix_unitaire' => ['required', 'numeric', 'min:0'],
         ];

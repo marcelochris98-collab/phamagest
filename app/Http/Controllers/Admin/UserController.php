@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
+use App\Support\CurrentEntreprise;
 use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -18,6 +19,9 @@ class UserController extends Controller
     public function index(): View
     {
         $users = User::with('roles', 'permissions')
+            ->whereHas('entreprises', function ($query) {
+                $query->whereKey(app(CurrentEntreprise::class)->get()->getKey());
+            })
             ->orderBy('name')
             ->paginate(12);
 
@@ -31,12 +35,14 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): RedirectResponse
     {
+        $entreprise = app(CurrentEntreprise::class)->get();
         $user = User::create([
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
             'password' => $request->validated('password'),
             'email_verified_at' => now(),
         ]);
+        $user->entreprises()->attach($entreprise);
 
         $this->syncRoleAndPermissions($user, $request->validated('role'), $request->input('permissions', []));
 
@@ -47,6 +53,8 @@ class UserController extends Controller
 
     public function edit(User $user): View
     {
+        $this->ensureUserBelongsToCurrentEntreprise($user);
+
         return view('admin.users.edit', array_merge(
             $this->formData(),
             ['user' => $user->load('roles', 'permissions')]
@@ -55,6 +63,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->ensureUserBelongsToCurrentEntreprise($user);
+
         $data = [
             'name' => $request->validated('name'),
             'email' => $request->validated('email'),
@@ -75,6 +85,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $this->ensureUserBelongsToCurrentEntreprise($user);
+
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Vous ne pouvez pas supprimer votre propre compte.');
         }
@@ -109,5 +121,15 @@ class UserController extends Controller
         $user->syncPermissions($permissions);
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
+    }
+
+    protected function ensureUserBelongsToCurrentEntreprise(User $user): void
+    {
+        abort_unless(
+            $user->entreprises()
+                ->whereKey(app(CurrentEntreprise::class)->get()->getKey())
+                ->exists(),
+            404
+        );
     }
 }

@@ -1,0 +1,42 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    private const TABLES = [
+        'fournisseurs',
+        'medicaments',
+        'clients',
+        'commandes',
+        'commande_items',
+        'ventes',
+        'vente_items',
+        'mouvements_stock',
+    ];
+
+    public function up(): void
+    {
+        foreach (self::TABLES as $tableName) {
+            if (DB::table($tableName)->whereNull('entreprise_id')->exists()) {
+                throw new RuntimeException("Cannot require entreprise_id: {$tableName} has unassigned records.");
+            }
+
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->foreignId('entreprise_id')->nullable(false)->change();
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        foreach (self::TABLES as $tableName) {
+            Schema::table($tableName, function (Blueprint $table) {
+                $table->foreignId('entreprise_id')->nullable()->change();
+            });
+        }
+    }
+};

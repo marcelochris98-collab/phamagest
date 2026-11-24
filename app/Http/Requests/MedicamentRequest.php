@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Support\CurrentEntreprise;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class MedicamentRequest extends FormRequest
 {
@@ -21,7 +23,11 @@ class MedicamentRequest extends FormRequest
             'quantite_stock' => ['required', 'integer', 'min:0'],
             'seuil_alerte' => ['required', 'integer', 'min:0'],
             'date_peremption' => ['nullable', 'date'],
-            'fournisseur_id' => ['nullable', 'exists:fournisseurs,id'],
+            'fournisseur_id' => [
+                'nullable',
+                Rule::exists('fournisseurs', 'id')
+                    ->where('entreprise_id', app(CurrentEntreprise::class)->get()->getKey()),
+            ],
         ];
     }
 }
