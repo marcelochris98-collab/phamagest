@@ -1,6 +1,6 @@
 # PharmaGest
 
-Application web monolithique **Laravel 11 + Blade + Tailwind** pour la gestion B2B d'une agence d'importation et de revente de médicaments en gros (Douala, Cameroun).
+Application web monolithique **Laravel 13 + Blade + Tailwind** pour la gestion B2B d'une agence d'importation et de revente de médicaments en gros (Douala, Cameroun).
 
 ## Fonctionnalités
 
@@ -14,6 +14,8 @@ Application web monolithique **Laravel 11 + Blade + Tailwind** pour la gestion B
 - **Utilisateurs** : gestion réservée à l'administrateur
 
 ## Installation (Laragon)
+
+Le projet nécessite **PHP 8.3 ou supérieur** et Composer. Puis installez les dépendances :
 
 ```bash
 composer install
@@ -69,7 +71,7 @@ npm install && npm run build
 - Configurez un fournisseur SMTP dans les variables `MAIL_*` du serveur pour la réinitialisation de mot de passe et les notifications. Le mode local `MAIL_MAILER=log` n’envoie pas de vrais e-mails.
 - Aucun paiement n’est intégré. Choisissez et ouvrez un compte auprès d’une passerelle compatible Cameroun avant de développer les webhooks de paiement.
 - Le contrôle documentaire est une revue manuelle interne, pas une certification réglementaire. Faites valider la liste exacte des justificatifs par un conseiller local compétent avant d’accepter de vraies pharmacies ou entreprises.
-- Avant toute ouverture publique : `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, clé APP protégée, sauvegarde hors site testée, SMTP vérifié, limites d’upload, supervision et procédure d’incident. Exécutez aussi `composer audit` et corrigez les avis avant déploiement : le framework Laravel 11 actuellement verrouillé est signalé par des avis connus, dont un critique; ne l’exposez pas en l’état.
+- Avant toute ouverture publique : `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, clé APP protégée, sauvegarde hors site testée, SMTP vérifié, limites d’upload, supervision et procédure d’incident. Les dépendances ont été mises à niveau vers Laravel 13 et `composer audit` ne signale actuellement aucun avis pour le lockfile; relancez cet audit avant chaque déploiement et gardez les dépendances à jour.
 
 ## Parcours métier type
 
@@ -79,4 +81,4 @@ npm install && npm run build
 
 ## Stack
 
-- Laravel 11, Breeze (sessions), Spatie Permission, DomPDF, Tailwind CSS 3, Alpine.js, Vite
+- Laravel 13, Breeze (sessions), Spatie Permission, DomPDF, Tailwind CSS 3, Alpine.js, Vite
