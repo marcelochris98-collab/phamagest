@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Entreprise;
 use App\Models\User;
+use App\Services\EntrepriseRoleService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,6 +21,25 @@ class ProfileTest extends TestCase
             ->get('/profile');
 
         $response->assertOk();
+    }
+
+    public function test_company_navigation_is_available_on_the_profile_page(): void
+    {
+        $entreprise = Entreprise::create([
+            'nom' => 'Entreprise Profil',
+            'slug' => 'entreprise-profil',
+            'verification_status' => 'approved',
+            'subscription_status' => 'active',
+        ]);
+        $user = User::factory()->create();
+        $user->entreprises()->attach($entreprise);
+        $user->assignRole(app(EntrepriseRoleService::class)->createDefaultRoles($entreprise));
+
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('Tableau de bord')
+            ->assertSee('Médicaments');
     }
 
     public function test_profile_information_can_be_updated(): void

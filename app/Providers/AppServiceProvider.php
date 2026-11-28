@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
 
                 if ($item['route'] === 'kpis.index') {
                     $entreprise = request()->attributes->get('currentEntreprise');
-                    if ($entreprise && ! $entreprise->subscriptionPlan()->firstOrFail()->kpis_enabled) {
+                    if ($entreprise && ! $entreprise->subscriptionPlan?->kpis_enabled) {
                         return false;
                     }
                 }

@@ -11,16 +11,22 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetCurrentEntreprise
 {
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string $mode = 'required'): Response
     {
         app(PermissionRegistrar::class)->setPermissionsTeamId(null);
+        View::share('activeEntreprise', null);
+        View::share('availableEntreprises', collect());
 
         $entreprises = $request->user()
             ->entreprises()
             ->orderBy('nom')
             ->get();
 
-        abort_if($entreprises->isEmpty(), 403, 'Votre compte n’est associé à aucune entreprise.');
+        if ($entreprises->isEmpty()) {
+            abort_if($mode !== 'optional', 403, 'Votre compte n’est associé à aucune entreprise.');
+
+            return $next($request);
+        }
 
         $selectedId = $request->session()->get('active_entreprise_id');
         $entreprise = $entreprises->first(
@@ -32,10 +38,14 @@ class SetCurrentEntreprise
             $request->session()->put('active_entreprise_id', $entreprise->getKey());
         }
 
-        if (! $entreprise) {
+        if (! $entreprise && $mode !== 'optional') {
             $request->session()->forget('active_entreprise_id');
 
             return redirect()->route('entreprise.choose');
+        }
+
+        if (! $entreprise) {
+            return $next($request);
         }
 
         app(CurrentEntreprise::class)->set($entreprise);

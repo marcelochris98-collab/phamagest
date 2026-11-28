@@ -21,10 +21,12 @@ class PlatformAdministrationTest extends TestCase
         $this->actingAs($user)
             ->get(route('platform.companies.index'))
             ->assertForbidden();
+        $this->get(route('platform.dashboard'))->assertForbidden();
 
         $user->forceFill(['is_platform_admin' => true])->save();
 
         $this->get(route('platform.companies.index'))->assertOk();
+        $this->get(route('platform.dashboard'))->assertOk();
     }
 
     public function test_approving_a_company_starts_a_trial_without_documents(): void
@@ -149,9 +151,9 @@ class PlatformAdministrationTest extends TestCase
                 'email' => $email,
                 'password' => 'correct-horse-battery-staple',
             ])
-            ->assertRedirect(route('platform.companies.index'));
+            ->assertRedirect(route('platform.dashboard'));
 
-        $this->get(route('platform.companies.index'))->assertOk();
+        $this->get(route('platform.dashboard'))->assertOk();
     }
 
     public function test_regular_company_admin_still_signs_in_to_the_company_dashboard(): void
@@ -168,6 +170,20 @@ class PlatformAdministrationTest extends TestCase
             'email' => $user->email,
             'password' => 'password',
         ])->assertRedirect(route('dashboard'));
+    }
+
+    public function test_platform_dashboard_shows_company_and_subscription_metrics(): void
+    {
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_platform_admin' => true])->save();
+        $this->createPendingCompany();
+
+        $this->actingAs($admin)
+            ->get(route('platform.dashboard'))
+            ->assertOk()
+            ->assertSee('Entreprises inscrites')
+            ->assertSee('Demandes en attente')
+            ->assertSee('Entreprise Test');
     }
 
     private function createPendingCompany(bool $withDocuments = false): Entreprise

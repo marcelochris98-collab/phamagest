@@ -33,7 +33,7 @@ class AuthenticatedSessionController extends Controller
         if ($user->isPlatformAdmin()) {
             $request->session()->forget('url.intended');
 
-            return redirect()->route('platform.companies.index');
+            return redirect()->route('platform.dashboard');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));

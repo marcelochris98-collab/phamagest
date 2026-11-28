@@ -1,6 +1,7 @@
 @extends('layouts.platform')
 
 @section('title', 'Forfaits')
+@section('page_title', 'Forfaits')
 
 @section('content')
 <div class="mb-6">
