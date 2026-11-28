@@ -51,6 +51,7 @@ class RegisteredUserController extends Controller
                 'verification_status' => 'approved',
                 'verified_at' => now(),
                 'subscription_status' => 'trial',
+                'subscription_plan' => 'essentiel',
                 'trial_ends_at' => now()->addMonth(),
             ]);
 

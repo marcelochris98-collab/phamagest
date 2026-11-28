@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Entreprise;
 use App\Models\EntrepriseDocument;
 use App\Models\PlatformAuditLog;
+use App\Models\SubscriptionPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,12 +20,16 @@ class CompanyController extends Controller
     public function index(): View
     {
         $entreprises = Entreprise::withCount('users')
+            ->with(['subscriptionPlan', 'requestedSubscriptionPlan'])
             ->with(['documents' => fn ($query) => $query->latest()->limit(4)])
             ->with(['platformAuditLogs' => fn ($query) => $query->with('actor')->latest()->limit(5)])
             ->latest()
             ->paginate(20);
 
-        return view('platform.companies.index', compact('entreprises'));
+        return view('platform.companies.index', [
+            'entreprises' => $entreprises,
+            'plans' => SubscriptionPlan::where('is_active', true)->orderBy('id')->get(),
+        ]);
     }
 
     public function approve(Request $request, Entreprise $entreprise): RedirectResponse
@@ -100,20 +105,45 @@ class CompanyController extends Controller
 
     public function updateSubscription(Request $request, Entreprise $entreprise): RedirectResponse
     {
+        $isTrial = $request->input('subscription_status') === 'trial';
+        $isActive = $request->input('subscription_status') === 'active';
+
         $validated = $request->validate([
             'subscription_status' => ['required', Rule::in(['trial', 'active', 'suspended', 'expired'])],
-            'subscription_plan' => ['required', 'string', 'max:50'],
-            'trial_ends_at' => ['nullable', 'date'],
-            'subscription_ends_at' => ['nullable', 'date'],
+            'subscription_plan' => ['required', 'string', Rule::exists('subscription_plans', 'slug')],
+            'trial_ends_at' => $isTrial
+                ? ['required', 'date', 'after:now']
+                : ['nullable', 'date'],
+            'subscription_ends_at' => $isActive
+                ? ['required', 'date', 'after:now']
+                : ['nullable', 'date'],
         ]);
 
         abort_unless($entreprise->verification_status === 'approved', 422, 'Vérifiez l’entreprise avant de gérer son abonnement.');
 
-        $before = $entreprise->only(['subscription_status', 'subscription_plan', 'trial_ends_at', 'subscription_ends_at']);
-        $entreprise->update($validated);
+        $before = $entreprise->only([
+            'subscription_status',
+            'subscription_plan',
+            'trial_ends_at',
+            'subscription_ends_at',
+            'subscription_requested_plan',
+            'subscription_requested_at',
+        ]);
+        $entreprise->update([
+            ...$validated,
+            'subscription_requested_plan' => null,
+            'subscription_requested_at' => null,
+        ]);
         $this->audit($request, $entreprise, 'subscription.updated', [
             'before' => $before,
-            'after' => $entreprise->only(['subscription_status', 'subscription_plan', 'trial_ends_at', 'subscription_ends_at']),
+            'after' => $entreprise->only([
+                'subscription_status',
+                'subscription_plan',
+                'trial_ends_at',
+                'subscription_ends_at',
+                'subscription_requested_plan',
+                'subscription_requested_at',
+            ]),
         ]);
 
         return back()->with('success', 'Abonnement mis à jour.');

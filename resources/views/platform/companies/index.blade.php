@@ -4,6 +4,10 @@
 
 @section('content')
 <h1 class="mb-6 text-2xl font-semibold">Administration des entreprises</h1>
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+    <p class="text-sm text-emerald-950">Gérez les forfaits, les limites et les prix en FCFA.</p>
+    <a href="{{ route('platform.plans.index') }}" class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">Configurer les forfaits</a>
+</div>
 
 <div class="space-y-6">
     @forelse ($entreprises as $entreprise)
@@ -12,7 +16,15 @@
                 <div>
                     <h2 class="text-lg font-semibold">{{ $entreprise->nom }}</h2>
                     <p class="mt-1 text-sm text-slate-500">{{ $entreprise->email ?: 'Pas d’e-mail entreprise' }} · {{ $entreprise->users_count }} utilisateur(s)</p>
-                    <p class="mt-2 text-sm">Vérification : <strong>{{ $entreprise->verification_status }}</strong> · Abonnement : <strong>{{ $entreprise->subscription_status }}</strong></p>
+                    <p class="mt-2 text-sm">Vérification : <strong>{{ $entreprise->verification_status }}</strong> · Abonnement : <strong>{{ $entreprise->subscription_status }}</strong> · Forfait : <strong>{{ $entreprise->subscriptionPlan?->name ?? 'Non défini' }}</strong></p>
+                    @if ($entreprise->subscription_requested_plan)
+                        <p class="mt-2 rounded-lg bg-sky-50 p-3 text-sm text-sky-900">
+                            Demande de forfait : <strong>{{ $entreprise->requestedSubscriptionPlan?->name ?? $entreprise->subscription_requested_plan }}</strong>
+                            @if ($entreprise->subscription_requested_at)
+                                · le {{ $entreprise->subscription_requested_at->format('d/m/Y à H:i') }}
+                            @endif
+                        </p>
+                    @endif
                     @if ($entreprise->verification_note)
                         <p class="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">{{ $entreprise->verification_note }}</p>
                     @endif
@@ -60,7 +72,17 @@
                         </select>
                     </label>
                     <label class="text-sm">Offre
-                        <input name="subscription_plan" value="{{ $entreprise->subscription_plan }}" required maxlength="50" class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                        <select name="subscription_plan" required class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
+                            @if ($entreprise->subscriptionPlan && ! $entreprise->subscriptionPlan->is_active)
+                                <option value="{{ $entreprise->subscriptionPlan->slug }}" selected>{{ $entreprise->subscriptionPlan->name }} — forfait désactivé</option>
+                            @endif
+                            @if (! $entreprise->subscriptionPlan)
+                                <option value="{{ $entreprise->subscription_plan }}" selected>{{ $entreprise->subscription_plan }} — forfait historique</option>
+                            @endif
+                            @foreach ($plans as $plan)
+                                <option value="{{ $plan->slug }}" @selected($entreprise->subscription_plan === $plan->slug)>{{ $plan->name }}{{ $plan->price_fcfa === null ? ' — prix à définir' : ' — '.number_format($plan->price_fcfa, 0, ',', ' ').' FCFA/mois' }}</option>
+                            @endforeach
+                        </select>
                     </label>
                     <label class="text-sm">Fin d’essai
                         <input name="trial_ends_at" type="datetime-local" value="{{ $entreprise->trial_ends_at?->format('Y-m-d\TH:i') }}" class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
@@ -68,7 +90,7 @@
                     <label class="text-sm">Fin d’abonnement
                         <input name="subscription_ends_at" type="datetime-local" value="{{ $entreprise->subscription_ends_at?->format('Y-m-d\TH:i') }}" class="mt-1 block w-full rounded-lg border-slate-300 text-sm">
                     </label>
-                    <button class="self-end rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-50">Enregistrer l’offre</button>
+                    <button class="self-end rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold hover:bg-slate-50">Enregistrer / activer l’offre</button>
                 </form>
             @endif
 

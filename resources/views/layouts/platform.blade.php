@@ -14,10 +14,14 @@
                 <p class="font-semibold">PharmaGest · Plateforme</p>
                 <p class="text-sm text-slate-500">Connecté : {{ auth()->user()->email }}</p>
             </div>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button class="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">Déconnexion</button>
-            </form>
+            <div class="flex items-center gap-3">
+                <a href="{{ route('platform.companies.index') }}" class="text-sm font-medium text-slate-700 hover:text-emerald-800">Entreprises</a>
+                <a href="{{ route('platform.plans.index') }}" class="text-sm font-medium text-slate-700 hover:text-emerald-800">Forfaits</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="rounded-lg border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50">Déconnexion</button>
+                </form>
+            </div>
         </div>
     </header>
     <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

@@ -9,9 +9,15 @@ class DefaultEntrepriseSeeder extends Seeder
 {
     public function run(): void
     {
-        Entreprise::firstOrCreate(
+        Entreprise::updateOrCreate(
             ['slug' => 'phamagest'],
-            ['nom' => 'PharmaGest']
+            [
+                'nom' => 'PharmaGest',
+                'verification_status' => 'approved',
+                'verified_at' => now(),
+                'subscription_status' => 'active',
+                'subscription_plan' => 'entreprise',
+            ]
         );
     }
 }

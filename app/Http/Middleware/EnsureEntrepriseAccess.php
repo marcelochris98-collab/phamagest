@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SubscriptionExpiryService;
 use App\Support\CurrentEntreprise;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,11 +18,9 @@ class EnsureEntrepriseAccess
             return redirect()->route('entreprise.verification.status');
         }
 
-        if (in_array($entreprise->subscription_status, ['suspended', 'pending'], true)
-            || ($entreprise->subscription_status === 'trial'
-                && (! $entreprise->trial_ends_at || $entreprise->trial_ends_at->isPast()))
-            || ($entreprise->subscription_status === 'active'
-                && $entreprise->subscription_ends_at?->isPast())) {
+        $hasExpired = app(SubscriptionExpiryService::class)->expireIfDue($entreprise, $request);
+
+        if ($hasExpired || in_array($entreprise->subscription_status, ['suspended', 'pending', 'expired'], true)) {
             return redirect()->route('entreprise.subscription.status');
         }
 

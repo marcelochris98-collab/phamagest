@@ -16,6 +16,9 @@ class DefaultEntrepriseSeederTest extends TestCase
         $this->seed();
 
         $entreprise = Entreprise::where('slug', 'phamagest')->firstOrFail();
+        $this->assertSame('approved', $entreprise->verification_status);
+        $this->assertSame('active', $entreprise->subscription_status);
+        $this->assertSame('entreprise', $entreprise->subscription_plan);
 
         foreach ([
             'fournisseurs',

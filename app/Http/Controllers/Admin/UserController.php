@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\Entreprise;
 use App\Models\User;
+use App\Services\SubscriptionLimitService;
 use App\Support\CurrentEntreprise;
 use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
@@ -39,6 +41,11 @@ class UserController extends Controller
         $entreprise = app(CurrentEntreprise::class)->get();
 
         $user = DB::transaction(function () use ($request, $entreprise) {
+            $lockedEntreprise = Entreprise::query()->lockForUpdate()->findOrFail($entreprise->id);
+            if (! app(SubscriptionLimitService::class)->canAddUser($lockedEntreprise)) {
+                return null;
+            }
+
             $user = User::create([
                 'name' => $request->validated('name'),
                 'email' => $request->validated('email'),
@@ -51,6 +58,10 @@ class UserController extends Controller
 
             return $user;
         });
+
+        if (! $user) {
+            return back()->withInput()->with('error', 'La limite d’utilisateurs de votre forfait est atteinte. Contactez PharmaGest pour changer de forfait.');
+        }
 
         return redirect()
             ->route('admin.users.index')

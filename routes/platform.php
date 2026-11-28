@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Platform\CompanyController;
+use App\Http\Controllers\Platform\SubscriptionPlanController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'platform.admin'])
@@ -8,6 +9,8 @@ Route::middleware(['auth', 'verified', 'platform.admin'])
     ->name('platform.')
     ->group(function () {
         Route::get('companies', [CompanyController::class, 'index'])->name('companies.index');
+        Route::get('plans', [SubscriptionPlanController::class, 'index'])->name('plans.index');
+        Route::patch('plans/{plan}', [SubscriptionPlanController::class, 'update'])->name('plans.update');
         Route::post('companies/{entreprise}/approve', [CompanyController::class, 'approve'])->name('companies.approve');
         Route::post('companies/{entreprise}/reject', [CompanyController::class, 'reject'])->name('companies.reject');
         Route::patch('companies/{entreprise}/subscription', [CompanyController::class, 'updateSubscription'])->name('companies.subscription');

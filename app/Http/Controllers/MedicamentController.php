@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\MedicamentRequest;
+use App\Models\Entreprise;
 use App\Models\Fournisseur;
 use App\Models\Medicament;
+use App\Services\SubscriptionLimitService;
+use App\Support\CurrentEntreprise;
 use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class MedicamentController extends Controller
@@ -33,7 +37,21 @@ class MedicamentController extends Controller
     {
         $this->authorizePermission(Permissions::MEDICAMENTS_MANAGE);
 
-        Medicament::create($request->validated());
+        $entreprise = app(CurrentEntreprise::class)->get();
+        $created = DB::transaction(function () use ($entreprise, $request) {
+            $lockedEntreprise = Entreprise::query()->lockForUpdate()->findOrFail($entreprise->id);
+            if (! app(SubscriptionLimitService::class)->canAddProduct($lockedEntreprise)) {
+                return false;
+            }
+
+            Medicament::create($request->validated());
+
+            return true;
+        });
+
+        if (! $created) {
+            return back()->withInput()->with('error', 'La limite de produits de votre forfait est atteinte. Contactez PharmaGest pour changer de forfait.');
+        }
 
         return redirect()->route('medicaments.index')->with('success', 'Médicament ajouté au catalogue.');
     }

@@ -23,6 +23,12 @@ return [
         'role' => 'administrateur',
     ],
     [
+        'label' => 'Forfait',
+        'route' => 'entreprise.subscription.status',
+        'icon' => 'building',
+        'role' => 'administrateur',
+    ],
+    [
         'label' => 'Médicaments',
         'route' => 'medicaments.index',
         'icon' => 'pill',

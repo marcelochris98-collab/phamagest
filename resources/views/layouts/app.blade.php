@@ -22,6 +22,32 @@
             <main class="flex-1 p-6 lg:p-8">
                 @include('layouts.partials.flash')
 
+                @isset($activeEntreprise)
+                    @php
+                        $subscriptionDeadline = $activeEntreprise->subscription_status === 'trial'
+                            ? $activeEntreprise->trial_ends_at
+                            : ($activeEntreprise->subscription_status === 'active' ? $activeEntreprise->subscription_ends_at : null);
+                        $subscriptionDaysLeft = $subscriptionDeadline
+                            ? now()->diffInDays($subscriptionDeadline, false)
+                            : null;
+                    @endphp
+                    @if ($subscriptionDaysLeft !== null && $subscriptionDaysLeft >= 0 && $subscriptionDaysLeft <= 7)
+                        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950" role="status">
+                            <p>
+                                @if ($subscriptionDaysLeft < 1)
+                                    Votre {{ $activeEntreprise->subscription_status === 'trial' ? 'essai' : 'abonnement' }} expire aujourd’hui.
+                                @else
+                                    Votre {{ $activeEntreprise->subscription_status === 'trial' ? 'essai' : 'abonnement' }} expire dans {{ (int) ceil($subscriptionDaysLeft) }} jour(s).
+                                @endif
+                                Choisissez votre forfait pour demander son renouvellement.
+                            </p>
+                            @role('administrateur')
+                                <a href="{{ route('entreprise.subscription.status') }}" class="font-semibold underline underline-offset-2">Voir les forfaits</a>
+                            @endrole
+                        </div>
+                    @endif
+                @endisset
+
                 @isset($header)
                     <div class="mb-8">
                         <h1 class="text-2xl font-semibold tracking-tight text-slate-900">{{ $header }}</h1>

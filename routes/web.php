@@ -4,6 +4,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommandeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EntrepriseContextController;
+use App\Http\Controllers\EntrepriseSubscriptionController;
 use App\Http\Controllers\EntrepriseVerificationController;
 use App\Http\Controllers\FournisseurController;
 use App\Http\Controllers\MedicamentController;
@@ -36,8 +37,11 @@ Route::middleware(['auth', 'entreprise'])->group(function () {
     Route::post('/entreprise/verification', [EntrepriseVerificationController::class, 'resubmit'])
         ->middleware('role:administrateur')
         ->name('entreprise.verification.resubmit');
-    Route::view('/entreprise/abonnement', 'entreprises.subscription-status')
+    Route::get('/entreprise/abonnement', [EntrepriseSubscriptionController::class, 'show'])
         ->name('entreprise.subscription.status');
+    Route::post('/entreprise/abonnement/demande', [EntrepriseSubscriptionController::class, 'requestPlan'])
+        ->middleware('role:administrateur')
+        ->name('entreprise.subscription.request');
 });
 
 Route::middleware('auth')->group(function () {

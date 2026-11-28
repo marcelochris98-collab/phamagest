@@ -8,7 +8,9 @@ use App\Models\Client;
 use App\Models\Commande;
 use App\Models\Medicament;
 use App\Models\MouvementStock;
+use App\Models\SubscriptionPlan;
 use App\Models\Vente;
+use App\Support\CurrentEntreprise;
 use App\Support\Permissions;
 use Illuminate\View\View;
 
@@ -27,6 +29,13 @@ class DashboardController extends Controller
     public function kpis(): View
     {
         $this->authorizeKpi();
+        abort_unless(
+            SubscriptionPlan::where('slug', app(CurrentEntreprise::class)->get()->subscription_plan)
+                ->firstOrFail()
+                ->kpis_enabled,
+            403,
+            'Les indicateurs KPI ne sont pas inclus dans le forfait de cette entreprise.'
+        );
 
         $stats = [
             'medicaments' => Medicament::count(),

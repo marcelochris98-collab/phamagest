@@ -56,7 +56,9 @@ npm install && npm run build
 - Les données métier et les rôles sont séparés par entreprise. L’inscription ne vérifie pas l’identité légale ou l’autorisation pharmaceutique de l’entreprise.
 - Le compte administrateur plateforme est distinct des comptes d’entreprise. Créez-le une seule fois avec `php artisan platform:admin:create admin@example.com`, puis choisissez un mot de passe dédié et robuste dans l’invite masquée. Connectez-vous depuis `/login`; ce compte arrive directement sur `/platform/companies` et ne rejoint aucun espace entreprise. Les administrateurs d’entreprise ordinaires arrivent sur leur tableau de bord.
 - L’administration plateforme (`/platform/companies`) permet de gérer les statuts d’abonnement et les essais; les décisions sont journalisées. Pour promouvoir un compte existant à la place, utilisez `php artisan platform:admin adresse@example.com`.
-- Après l’essai, l’accès est suspendu si aucun abonnement n’est actif. Le choix du forfait par l’entreprise et les limites de fonctionnalités par forfait restent à développer; aucun paiement en ligne ni facturation récurrente n’est branché.
+- Les forfaits Essentiel, Croissance et Entreprise sont configurables dans `/platform/plans`. Le super-admin peut modifier les prix mensuels en FCFA, les plafonds d’utilisateurs et de produits, et l’accès aux KPI. Une limite vide signifie « sans limite »; modifier une limite ne supprime aucune donnée existante.
+- L’essai initial dure un mois sur le forfait Essentiel. Dans les 7 jours avant l’échéance, l’espace entreprise affiche un avertissement. À l’échéance, la première requête protégée suspend l’accès aux fonctions métier et journalise l’expiration; l’entreprise conserve l’accès à sa page abonnement pour demander un forfait. L’administrateur plateforme doit l’activer manuellement.
+- L’entreprise peut demander un forfait ou son renouvellement depuis **Forfait**; la demande ne vaut pas paiement et n’active pas l’abonnement. Les prix sont à définir par le super-admin. Aucun paiement en ligne ni facturation récurrente n’est branché.
 
 ### Sauvegardes et restauration (MySQL/MariaDB)
 
