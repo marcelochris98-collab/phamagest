@@ -7,6 +7,7 @@ use App\Models\Medicament;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use App\Support\CurrentEntreprise;
+use App\Support\Permissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -185,6 +186,28 @@ class SubscriptionManagementTest extends TestCase
 
         SubscriptionPlan::where('slug', 'essentiel')->update(['kpis_enabled' => true]);
         $this->get(route('kpis.index'))->assertOk();
+    }
+
+    public function test_company_dashboard_uses_role_permissions_and_plan_features(): void
+    {
+        [$entreprise, $admin, $role] = $this->createCompany();
+        Permission::firstOrCreate(['name' => Permissions::DASHBOARD_VIEW, 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => Permissions::MEDICAMENTS_VIEW, 'guard_name' => 'web']);
+        Permission::firstOrCreate(['name' => Permissions::KPIS_VIEW, 'guard_name' => 'web']);
+        $role->givePermissionTo([
+            Permissions::DASHBOARD_VIEW,
+            Permissions::MEDICAMENTS_VIEW,
+            Permissions::KPIS_VIEW,
+        ]);
+        $this->setUpCurrentEntreprise($entreprise);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Vue d’ensemble')
+            ->assertSee('Produits au catalogue')
+            ->assertDontSee('Chiffre d’affaires du mois')
+            ->assertDontSee('Voir les indicateurs KPI');
     }
 
     private function createCompany(): array

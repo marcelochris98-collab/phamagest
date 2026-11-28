@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Support\CurrentEntreprise;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Spatie\Permission\PermissionRegistrar;
 use Symfony\Component\HttpFoundation\Response;
@@ -53,6 +54,19 @@ class SetCurrentEntreprise
         $request->attributes->set('currentEntreprise', $entreprise);
         View::share('activeEntreprise', $entreprise);
         View::share('availableEntreprises', $entreprises);
+
+        $lastActivityAt = now();
+        DB::table('entreprise_user')
+            ->where('entreprise_id', $entreprise->getKey())
+            ->where('user_id', $request->user()->getKey())
+            ->where(function ($query) use ($lastActivityAt) {
+                $query->whereNull('last_activity_at')
+                    ->orWhere('last_activity_at', '<=', $lastActivityAt->copy()->subMinute());
+            })
+            ->update([
+                'last_activity_at' => $lastActivityAt,
+                'updated_at' => $lastActivityAt,
+            ]);
 
         return $next($request);
     }

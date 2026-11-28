@@ -10,10 +10,16 @@
         <h2 class="mt-1 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Bonjour, {{ auth()->user()->name }}</h2>
         <p class="mt-2 text-sm text-slate-600">Suivez les entreprises, les abonnements et les demandes de votre plateforme.</p>
     </div>
-    <a href="{{ route('platform.companies.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
-        Gérer les entreprises
-        <span aria-hidden="true">→</span>
-    </a>
+    <div class="flex flex-wrap items-center gap-3">
+        <span class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            {{ number_format($metrics['companiesOnline']) }} active(s) dans les 5 dernières minutes
+        </span>
+        <a href="{{ route('platform.companies.index') }}" class="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800">
+            Gérer les entreprises
+            <span aria-hidden="true">→</span>
+        </a>
+    </div>
 </div>
 
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Indicateurs plateforme">
@@ -66,6 +72,7 @@
                         <th class="px-5 py-3">Forfait</th>
                         <th class="px-5 py-3">Statut</th>
                         <th class="px-5 py-3 text-right">Membres</th>
+                        <th class="px-5 py-3">Activité</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -85,9 +92,18 @@
                                 ])>{{ ucfirst($entreprise->subscription_status) }}</span>
                             </td>
                             <td class="whitespace-nowrap px-5 py-3.5 text-right font-medium text-slate-700">{{ $entreprise->users_count }}</td>
+                            <td class="whitespace-nowrap px-5 py-3.5 text-xs text-slate-600">
+                                @if ($entreprise->last_activity_at?->isAfter(now()->subMinutes(5)))
+                                    <span class="font-semibold text-emerald-800">Active récemment</span>
+                                @elseif ($entreprise->last_activity_at)
+                                    {{ $entreprise->last_activity_at->diffForHumans() }}
+                                @else
+                                    <span class="text-slate-400">Jamais active</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
-                        <tr><td colspan="4" class="px-6 py-10 text-center text-sm text-slate-500">Aucune entreprise inscrite.</td></tr>
+                        <tr><td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">Aucune entreprise inscrite.</td></tr>
                     @endforelse
                 </tbody>
             </table>

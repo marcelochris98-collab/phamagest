@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Entreprise;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -49,6 +50,9 @@ class PlatformAdministrationTest extends TestCase
         $this->assertSame($admin->id, $entreprise->verified_by);
         $this->assertDatabaseCount('entreprise_documents', 0);
         $this->get(route('platform.companies.index'))
+            ->assertOk()
+            ->assertSee('Entreprise Test');
+        $this->get(route('platform.companies.show', $entreprise))
             ->assertOk()
             ->assertSee('Aucun justificatif fourni')
             ->assertSee('Historique des actions plateforme')
@@ -184,6 +188,39 @@ class PlatformAdministrationTest extends TestCase
             ->assertSee('Entreprises inscrites')
             ->assertSee('Demandes en attente')
             ->assertSee('Entreprise Test');
+    }
+
+    public function test_company_directory_filters_results_and_shows_recent_activity(): void
+    {
+        $entreprise = $this->createPendingCompany();
+        $user = $entreprise->users()->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(route('entreprise.verification.status'))
+            ->assertOk();
+
+        $this->assertNotNull(DB::table('entreprise_user')
+            ->where('entreprise_id', $entreprise->id)
+            ->where('user_id', $user->id)
+            ->value('last_activity_at'));
+
+        $admin = User::factory()->create();
+        $admin->forceFill(['is_platform_admin' => true])->save();
+
+        $this->actingAs($admin)
+            ->get(route('platform.companies.index', [
+                'search' => 'Entreprise Test',
+                'verification_status' => 'pending',
+                'subscription_status' => 'pending',
+            ]))
+            ->assertOk()
+            ->assertSee('Entreprise Test')
+            ->assertSee('Active récemment');
+
+        $this->get(route('platform.companies.index', ['search' => 'Aucune correspondance']))
+            ->assertOk()
+            ->assertSee('Aucune entreprise trouvée')
+            ->assertDontSee('Entreprise Test');
     }
 
     private function createPendingCompany(bool $withDocuments = false): Entreprise

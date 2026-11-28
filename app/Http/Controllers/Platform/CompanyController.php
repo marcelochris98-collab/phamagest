@@ -17,17 +17,71 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CompanyController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $entreprises = Entreprise::withCount('users')
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'verification_status' => ['nullable', Rule::in(['pending', 'approved', 'rejected'])],
+            'subscription_status' => ['nullable', Rule::in(['pending', 'trial', 'active', 'suspended', 'expired'])],
+            'plan' => ['nullable', 'string', Rule::exists('subscription_plans', 'slug')],
+        ]);
+
+        $query = Entreprise::query()
+            ->withCount('users')
             ->with(['subscriptionPlan', 'requestedSubscriptionPlan'])
-            ->with(['documents' => fn ($query) => $query->latest()->limit(4)])
-            ->with(['platformAuditLogs' => fn ($query) => $query->with('actor')->latest()->limit(5)])
-            ->latest()
-            ->paginate(20);
+            ->addSelect([
+                'last_activity_at' => DB::table('entreprise_user')
+                    ->selectRaw('MAX(last_activity_at)')
+                    ->whereColumn('entreprise_user.entreprise_id', 'entreprises.id'),
+            ])
+            ->withCasts(['last_activity_at' => 'datetime']);
+
+        if ($search = $filters['search'] ?? null) {
+            $query->where(function ($query) use ($search) {
+                $query->where('nom', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('telephone', 'like', "%{$search}%")
+                    ->orWhereHas('users', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($verificationStatus = $filters['verification_status'] ?? null) {
+            $query->where('verification_status', $verificationStatus);
+        }
+
+        if ($subscriptionStatus = $filters['subscription_status'] ?? null) {
+            $query->where('subscription_status', $subscriptionStatus);
+        }
+
+        if ($plan = $filters['plan'] ?? null) {
+            $query->where('subscription_plan', $plan);
+        }
+
+        $entreprises = $query->latest()->paginate(20)->withQueryString();
 
         return view('platform.companies.index', [
             'entreprises' => $entreprises,
+            'plans' => SubscriptionPlan::where('is_active', true)->orderBy('id')->get(),
+            'filters' => $filters,
+        ]);
+    }
+
+    public function show(Entreprise $entreprise): View
+    {
+        $entreprise->loadCount('users');
+        $entreprise->load([
+            'subscriptionPlan',
+            'requestedSubscriptionPlan',
+            'documents' => fn ($query) => $query->latest(),
+            'users' => fn ($query) => $query->orderBy('name'),
+            'platformAuditLogs' => fn ($query) => $query->with('actor')->latest(),
+        ]);
+
+        return view('platform.companies.show', [
+            'entreprise' => $entreprise,
             'plans' => SubscriptionPlan::where('is_active', true)->orderBy('id')->get(),
         ]);
     }
